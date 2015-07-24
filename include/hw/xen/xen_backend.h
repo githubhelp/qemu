@@ -97,6 +97,7 @@ extern struct XenDevOps xen_kbdmouse_ops;     /* xen_framebuffer.c */
 extern struct XenDevOps xen_framebuffer_ops;  /* xen_framebuffer.c */
 extern struct XenDevOps xen_blkdev_ops;       /* xen_disk.c        */
 extern struct XenDevOps xen_netdev_ops;       /* xen_nic.c         */
+extern struct XenDevOps xen_p9_ops;           /* xen_p9.c eventual name*/
 
 void xen_init_display(int domid);
 
@@ -107,5 +108,6 @@ int xen_config_dev_nic(NICInfo *nic);
 int xen_config_dev_vfb(int vdev, const char *type);
 int xen_config_dev_vkbd(int vdev);
 int xen_config_dev_console(int vdev);
+int xen_config_dev_p9 (void);
 
 #endif /* QEMU_HW_XEN_BACKEND_H */

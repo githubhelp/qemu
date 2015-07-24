@@ -64,7 +64,10 @@ static void xen_init_pv(MachineState *machine)
     xen_be_register("vfb", &xen_framebuffer_ops);
     xen_be_register("qdisk", &xen_blkdev_ops);
     xen_be_register("qnic", &xen_netdev_ops);
-
+    fprintf (stderr, "about to register backend\n");
+    i= xen_be_register("p9", &xen_p9_ops);
+    fprintf (stderr, "registered backend %d\n",i);
+    
     /* configure framebuffer */
     if (xenfb_enabled) {
         xen_config_dev_vfb(0, "vnc");
