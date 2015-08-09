@@ -1,0 +1,9 @@
+./xen-9p.c:    virtqueue_push(s->vq, &pdu->elem, len);
+./xen-9p.c:    virtio_notify(VIRTIO_DEVICE(s), s->vq);
+./xen-9p.c:void handle_9p_output(VirtIODevice *vdev, VirtQueue *vq)
+./xen-9p.c:            (len = virtqueue_pop(vq, &pdu->elem)) != 0) {
+./virtio-9p.h:    VirtQueue *vq;
+./virtio-9p.h:extern void handle_9p_output(VirtIODevice *vdev, VirtQueue *vq);
+./xen-9p-device.c:    s->vq = virtio_add_queue(vdev, MAX_REQ, handle_9p_output);
+./v9fs_server.h:    VirtQueue *vq;
+./v9fs_server.h:extern void handle_9p_output(VirtIODevice *vdev, VirtQueue *vq);
