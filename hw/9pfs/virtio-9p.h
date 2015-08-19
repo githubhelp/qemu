@@ -199,7 +199,7 @@ struct V9fsFidState
 
 typedef struct V9fsState
 {
-    VirtIODevice parent_obj;
+    VirtIODevice parent_obj; 
     VirtQueue *vq;
     V9fsPDU pdus[MAX_REQ];
     QLIST_HEAD(, V9fsPDU) free_list;
@@ -246,7 +246,7 @@ typedef struct V9fsReadState {
     int32_t total;
     int64_t off;
     V9fsFidState *fidp;
-    struct iovec iov[128]; /* FIXME: bad, bad, bad */
+    struct iovec iov[128]; /* FIXME: bad, bad, bad:  I agree; may I? LRJ*/
     struct iovec *sg;
     off_t dir_pos;
     struct dirent *dent;
@@ -336,8 +336,10 @@ typedef struct V9fsGetlock
     V9fsString client_id;
 } V9fsGetlock;
 
+extern int open_fd_rc;
 extern int open_fd_hw;
 extern int total_open_fd;
+
 
 size_t pdu_packunpack(void *addr, struct iovec *sg, int sg_count,
                       size_t offset, size_t size, int pack);
@@ -374,7 +376,7 @@ static inline uint8_t v9fs_request_cancelled(V9fsPDU *pdu)
     return pdu->cancelled;
 }
 
-extern void handle_9p_output(VirtIODevice *vdev, VirtQueue *vq);
+
 extern void v9fs_reclaim_fd(V9fsPDU *pdu);
 extern void v9fs_path_init(V9fsPath *path);
 extern void v9fs_path_free(V9fsPath *path);
@@ -382,13 +384,33 @@ extern void v9fs_path_copy(V9fsPath *lhs, V9fsPath *rhs);
 extern int v9fs_name_to_path(V9fsState *s, V9fsPath *dirpath,
                              const char *name, V9fsPath *path);
 
+void free_pdu(V9fsState *s, V9fsPDU *pdu);
+V9fsPDU *alloc_pdu(V9fsState *s);
+void submit_pdu(V9fsState *s, V9fsPDU *pdu);
+
 #define pdu_marshal(pdu, offset, fmt, args...)  \
     v9fs_marshal(pdu->elem.in_sg, pdu->elem.in_num, offset, 1, fmt, ##args)
 #define pdu_unmarshal(pdu, offset, fmt, args...)  \
     v9fs_unmarshal(pdu->elem.out_sg, pdu->elem.out_num, offset, 1, fmt, ##args)
 
+#ifdef GENERIC_9P_SERVER
+
+#define complete_pdu (s, pdu, len)   pdu->s->complete (pdu, len);
+
+#else
+
+extern void handle_9p_output(VirtIODevice *vdev, VirtQueue *vq);
+void complete_pdu(V9fsState *s, V9fsPDU *pdu, ssize_t len);
+
+
 #define TYPE_VIRTIO_9P "virtio-9p-device"
 #define VIRTIO_9P(obj) \
         OBJECT_CHECK(V9fsState, (obj), TYPE_VIRTIO_9P)
+
+
+#define DEFINE_VIRTIO_9P_PROPERTIES(_state, _field)             \
+        DEFINE_PROP_STRING("mount_tag", _state, _field.tag),    \
+        DEFINE_PROP_STRING("fsdev", _state, _field.fsdev_id)
+#endif
 
 #endif

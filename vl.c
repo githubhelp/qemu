@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#define CONFIG_VIRTFS
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -3451,6 +3452,7 @@ int main(int argc, char **argv, char **envp)
                 }
                 break;
             case QEMU_OPTION_fsdev:
+	      fprintf (stderr, "in fsdev case\n");
                 olist = qemu_find_opts("fsdev");
                 if (!olist) {
                     fprintf(stderr, "fsdev is not supported by this qemu build.\n");
@@ -3461,6 +3463,57 @@ int main(int argc, char **argv, char **envp)
                     exit(1);
                 }
                 break;
+		
+            case QEMU_OPTION_xen9pfs: {
+                QemuOpts *fsdev;
+		const char *path;
+
+		fprintf (stderr, "got to xen9pfs case statement \n");
+                olist = qemu_find_opts("xen9pfs");
+                if (!olist) {
+                    fprintf(stderr, "xen9pfs is not supported by this qemu build.\n");
+                    exit(1);
+                }
+		                opts = qemu_opts_parse_noisily(olist, optarg, true);
+                if (!opts) {
+                    exit(1);
+                }
+
+                if (qemu_opt_get(opts, "fsdriver") == NULL ||
+                    qemu_opt_get(opts, "mount_tag") == NULL) {
+                    fprintf(stderr, "Usage: -xen9pfs fsdriver,mount_tag=tag.\n");
+                    exit(1);
+                }
+                fsdev = qemu_opts_create(qemu_find_opts("fsdev"),
+                                         qemu_opt_get(opts, "mount_tag"),
+                                         1, NULL);
+                if (!fsdev) {
+                    fprintf(stderr, "duplicate fsdev id: %s\n",
+                            qemu_opt_get(opts, "mount_tag"));
+                    exit(1);
+                }
+                qemu_opt_set(fsdev, "fsdriver",
+                             qemu_opt_get(opts, "fsdriver"), &error_abort);
+		path =  qemu_opt_get(opts, "path");
+		fprintf (stderr, "path is %s\n",path);
+                qemu_opt_set(fsdev, "path", path,
+                             &error_abort);
+                qemu_opt_set(fsdev, "security_model",
+                             qemu_opt_get(opts, "security_model"),
+                             &error_abort);
+               qemu_opt_set_bool(fsdev, "readonly",
+                                  qemu_opt_get_bool(opts, "readonly", 0),
+                                  &error_abort);
+/*                device = qemu_opts_create(qemu_find_opts("device"), NULL, 0,
+                                          &error_abort);
+                qemu_opt_set(device, "driver", "virtio-9p-pci", &error_abort);
+                qemu_opt_set(device, "fsdev",
+                             qemu_opt_get(opts, "mount_tag"), &error_abort);
+                qemu_opt_set(device, "mount_tag",
+		qemu_opt_get(opts, "mount_tag"), &error_abort);*/
+		break;
+	    }
+	      
             case QEMU_OPTION_virtfs: {
                 QemuOpts *fsdev;
                 QemuOpts *device;
