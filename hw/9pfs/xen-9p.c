@@ -20,6 +20,7 @@
 #include "virtio-9p-coth.h"
 #include "trace.h"
 #include "migration/migration.h"
+#include "hw/hw.h"
 #include "hw/xen/xen_backend.h"
 #include "xen_p9.h"
 #include "v9fs_server.h"
@@ -77,12 +78,7 @@ void xen_complete_pdu(V9fsState *s, V9fsPDU *pdu, ssize_t len)
     free_pdu(s, pdu);
 }
 
-/*
- *
- * set up pointers to output data  - this is being saved to use as a template
- * will not be in real version - FIX ME
- * I think this is what I call handle_requests.
- */
+
 bool xen_pdu_handle (V9GenericFsState *gs, struct iovec *in_sg,
 		     struct iovec *out_sg)
 {
