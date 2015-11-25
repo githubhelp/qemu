@@ -3451,6 +3451,7 @@ int main(int argc, char **argv, char **envp)
                     exit(1);
                 }
                 break;
+		
             case QEMU_OPTION_fsdev:
 	      fprintf (stderr, "in fsdev case\n");
                 olist = qemu_find_opts("fsdev");
@@ -3467,6 +3468,9 @@ int main(int argc, char **argv, char **envp)
             case QEMU_OPTION_xen9pfs: {
                 QemuOpts *fsdev;
 		const char *path;
+		const char *driver;
+		QemuOptsList *fsdevls;
+		const char *mnt;
 
 		fprintf (stderr, "got to xen9pfs case statement \n");
                 olist = qemu_find_opts("xen9pfs");
@@ -3474,28 +3478,30 @@ int main(int argc, char **argv, char **envp)
                     fprintf(stderr, "xen9pfs is not supported by this qemu build.\n");
                     exit(1);
                 }
-		                opts = qemu_opts_parse_noisily(olist, optarg, true);
+                opts = qemu_opts_parse_noisily(olist, optarg, true);
                 if (!opts) {
                     exit(1);
                 }
-
-                if (qemu_opt_get(opts, "fsdriver") == NULL ||
-                    qemu_opt_get(opts, "mount_tag") == NULL) {
+		mnt = qemu_opt_get(opts, "mount_tag");
+		driver = qemu_opt_get(opts, "fsdriver");
+                if ( driver == NULL || mnt == NULL) {
                     fprintf(stderr, "Usage: -xen9pfs fsdriver,mount_tag=tag.\n");
                     exit(1);
                 }
-                fsdev = qemu_opts_create(qemu_find_opts("fsdev"),
-                                         qemu_opt_get(opts, "mount_tag"),
-                                         1, NULL);
+		fsdevls = qemu_find_opts("fsdev");
+		fprintf (stderr, "fsdev is %s\n",fsdevls->name);
+                fsdev = qemu_opts_create(fsdevls, mnt, 1, NULL);
                 if (!fsdev) {
-                    fprintf(stderr, "duplicate fsdev id: %s\n",
-                            qemu_opt_get(opts, "mount_tag"));
-                    exit(1);
-                }
+                    fprintf(stderr,
+			"error creating fsdev for mount %s\n", mnt);
+		    exit (1);
+		}
+
                 qemu_opt_set(fsdev, "fsdriver",
-                             qemu_opt_get(opts, "fsdriver"), &error_abort);
-		path =  qemu_opt_get(opts, "path");
-		fprintf (stderr, "path is %s\n",path);
+                             driver, &error_abort);
+		path = qemu_opt_get(opts, "path");
+		driver =  qemu_opt_get(opts, "fsdriver");
+		fprintf (stderr, "path is %s\n driver is %s\n",path, driver);
                 qemu_opt_set(fsdev, "path", path,
                              &error_abort);
                 qemu_opt_set(fsdev, "security_model",

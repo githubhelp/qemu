@@ -216,12 +216,16 @@ static int p9_init(struct XenDevice *xendev)
     FsDriverEntry *fse;
     char fsdev_id[30];
     const char *fsdev = "fsdev0";
-    const char mount_tag[] = "9pMount";
+    const char mount_tag[] = "mount_tag";
+    const char mount_tag_len[] = "mount_tag_len";
     char m_tag[30];
 
-    strcpy (fsdev_id, "local");
-    strcpy (m_tag, "9pMount");
     fprintf (stderr, "in init\n");
+    fprintf (stderr, "fsdev is %s\n", fsdev);
+	     
+    strcpy (fsdev_id, fsdev);
+    strcpy (m_tag, "P9Mount");
+    fprintf (stderr, "in init fsdev_id is %s\n", fsdev_id);
     init_freelist (p9dev);
     /*
      *  allocate, the state struct
@@ -237,15 +241,13 @@ static int p9_init(struct XenDevice *xendev)
     gs->devptr = (void *) p9dev;
     gs->complete = xen_complete_pdu;
     v9fs_path_init(&path);
-    fprintf (stderr, "path is %s\n", path.data);
     //    fsdev_id = qemu_opt_get (&qemu_xen_fsdev_opts, fsdev);
     xenstore_write_be_str (xendev, fsdev, fsdev_id);
-    fse = get_fsdev_fsentry(fsdev_id);
+    fse = get_fsdev_fsentry(m_tag);
     if (!fse) {
         /* We don't have a fsdev identified by fsdev_id */
-        fprintf(stderr, "Xen-9p device couldn't find fsdev with the "
-                   "id = %s\n",
-		fsdev_id/* ? fsdev_id : "NULL"*/);
+        fprintf(stderr, "Xen-9p device couldn't find fsdev with the id = %s\n",
+		m_tag);
         exit(1);
     }
     fprintf (stderr, "fse path is %s\n", fse->path);
@@ -259,6 +261,7 @@ static int p9_init(struct XenDevice *xendev)
      */
     //    m_tag = qemu_opt_get (qemu_xen9pfs_opts, mount_tag);
     xenstore_write_be_str (xendev, mount_tag, m_tag);
+    xenstore_write_be_int (xendev, mount_tag_len, strlen (m_tag));
     s->tag = g_strdup(m_tag);
     qemu_co_rwlock_init(&s->rename_lock);
 
